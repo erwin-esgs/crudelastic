@@ -1,7 +1,9 @@
 <html>
-  
- <input type="text" id="username" name="username"/>
- <input type="password" id="password" name="password"/>
+<body>
+
+ <input type="text" id="one" name="one"/>
+ <input type="text" id="two" name="two"/> 
+ <textarea id="three" name="three" ></textarea>
  
  <button type="button" onclick="return submitData()">checkData</button> 
  <br><br>
@@ -12,17 +14,23 @@
  <button type="button" onclick="return createIndex()">createIndex</button> 
  <button type="button" onclick="return deleteIndex()">deleteIndex</button> 
  <button type="button" onclick="return showIndex()">showIndex</button> 
-  
+ <br><br>
+ <input type="file" id="filedata" name="filedata"/>
+ 
+ </body>
  </html> 
+ 
  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
  <script>
- var url = "http://localhost:9200/";
+ var url = "http://localhost:9201/";
+ 
+ let image;
  
  function submitData()
-{
-	//document.forms["filterdata"].submit(); 
-	var username = 	$("#username").val();
-	var password = $('#password').val(); 
+{ 
+	var one = 	$("#one").val();
+	var two = $('#two').val(); 
+	var three = $('#three').val();  
 	 
 	var settings = {
 	  "url": url+"_sql?format=json",
@@ -31,34 +39,41 @@
 	  "headers": {
 		"Content-Type": "application/json"
 	  },
-	  "data": JSON.stringify({"query":"SELECT status FROM testerwin WHERE username='"+username+"' AND password='"+password+"' ","fetch_size":10}),
+	  //"data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' AND two='"+two+"' ","fetch_size":10}),
+	  "data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' ","fetch_size":10}),
 	};  
 	$.ajax(settings).done(function (response) {
-	  console.log(response); 
-	  if( typeof (response.rows[0]) == 'undefined' ){
-	  alert("Login Failed");
-	  }else{
-	  alert("Login "+response.rows[0]); 
-	  }
-	  
+	  console.log(response.rows[0]); 
+	  // if( typeof (response.rows[0]) == 'undefined' ){ alert("Login Failed"); }else{ alert("Login "+response.rows[0]);  }
+	  if (image) image.remove();
+	  image = new Image();
+	  image.src = response.rows[0];
+	  document.body.append(image) 
 	})  
 }
 
  function addData()
 {
 	//document.forms["filterdata"].submit(); 
-	var username = 	$("#username").val();
-	var password = $('#password').val();  
-
+	var one = 	$("#one").val();
+	var two = $('#two').val();  
+	var three = $('#three').val();  
+	
+	if(three == ""){
+		three = btoa( document.getElementById('filedata').files[0] ) ; 
+			three = "data:image/jpeg;base64,/9j/"+three;
+	}
+	
 	var settings = {
-	  "url": url+"testerwin/user",
+	  "url": url+"testerwin/table",
 	  "type": "POST",
 	  "timeout": 0,
 	  "headers": {
 		"Content-Type": "application/json"
 	  },
-	  "data": JSON.stringify({"username" : username ,"password" : password,"status" : "berhasil"}),
+	  "data": JSON.stringify({"one" : one ,"two" : two,"three" : three}),
 	}; 
+	 
 
 	$.ajax(settings).done(function (response) {
 	  console.log(response);
@@ -67,8 +82,7 @@
 	
  function deleteData()
 {  
-	var username = 	$("#username").val();
-	var password = $('#password').val(); 
+	var one = 	$("#one").val(); 
 	
 	var settings = {
 	  "url": url+"testerwin/_delete_by_query",
@@ -81,7 +95,7 @@
 		   {
 			  "query": {
 				"match": {
-				  "username": username
+				  "one": one
 				}
 			  }
 			}
@@ -112,6 +126,7 @@ function showData()
 	var settings = {
 	  "url": url+"testerwin",
 	  "type": "PUT",
+	  "dataType": "json",
 	  "timeout": 0,
 	  "headers": {
 		"Content-Type": "application/json"
