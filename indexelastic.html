@@ -26,6 +26,18 @@
  
  let image;
  
+ function readFile() { 
+  if (this.files && this.files[0]) { 
+	var FR= new FileReader(); 
+	FR.addEventListener("load", function(e) {
+	  //document.getElementById("img").src       = e.target.result;
+	  document.getElementById("three").innerHTML = e.target.result; 
+	});  
+	FR.readAsDataURL( this.files[0] );
+  }  
+}
+document.getElementById("filedata").addEventListener("change", readFile);
+ 
  function submitData()
 { 
 	var one = 	$("#one").val();
@@ -48,21 +60,15 @@
 	  if (image) image.remove();
 	  image = new Image();
 	  image.src = response.rows[0];
-	  document.body.append(image) 
+	  document.body.append(image);
 	})  
 }
-
+ 
  function addData()
-{
-	//document.forms["filterdata"].submit(); 
+{ 
 	var one = 	$("#one").val();
 	var two = $('#two').val();  
-	var three = $('#three').val();  
-	
-	if(three == ""){
-		three = btoa( document.getElementById('filedata').files[0] ) ; 
-			three = "data:image/jpeg;base64,/9j/"+three;
-	}
+	var three = $('#three').val();   
 	
 	var settings = {
 	  "url": url+"testerwin/table",

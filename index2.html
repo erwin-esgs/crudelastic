@@ -2345,10 +2345,12 @@
 <div class="app-drawer-overlay d-none animated fadeIn"></div><script type="text/javascript" src="./assets/scripts/main.87c0748b313a1dda75f5.js"></script></body>
 </html>
 
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 <script src="face-api.min.js"></script>
 <script type="text/javascript">
 const imageUpload = document.getElementById('imageUpload')
 const imgcontainer = document.getElementById('imgcontainer')
+
 
 Promise.all([
 	faceapi.nets.faceRecognitionNet.loadFromUri('models'),
@@ -2395,18 +2397,36 @@ async function start() {
   })
 }
 
+const url = "http://localhost:9201/"
 function loadLabeledImages() {
-  const labels = ['Black Widow', 'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor', 'Tony Stark','Muhamad Anugrah']
+  //const labels = ['Black Widow', 'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor', 'Tony Stark','Muhamad Anugrah']
+  const labels = ['1', '2', '3', '4']
   return Promise.all(
     labels.map(async label => {
-      const descriptions = []
-      for (let i = 1; i <= 2; i++) {
-        //const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/WebDevSimplified/Face-Recognition-JavaScript/master/labeled_images/${label}/${i}.jpg`)
-        const img = new Image(); img.src = `labeled_images/${label}/${i}.jpg`;
-		const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-        descriptions.push(detections.descriptor)
-      }
-
+      const descriptions = []  
+		
+		var settings = {
+		  "url": url+"_sql?format=json",
+		  "type": "POST",
+		  "timeout": 0,
+		  "headers": {
+			"Content-Type": "application/json"
+		  },
+		  //"data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' AND two='"+two+"' ","fetch_size":10}),
+		  "data": JSON.stringify({"query":"SELECT two, three FROM testerwin WHERE one='"+label+"' ","fetch_size":10}),
+		};
+		
+		 var labelname;
+		$.ajax(settings).done(async function (response) {
+			 
+			labelname = response.rows[0][0] ;
+			const img = new Image(); img.src = response.rows[0][1];
+			const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+			await descriptions.push(detections.descriptor)
+			console.log(detections);
+			
+		}); 
+		//document.body.append(img);
       return new faceapi.LabeledFaceDescriptors(label, descriptions)
     })
   )
