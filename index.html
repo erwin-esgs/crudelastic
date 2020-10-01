@@ -1,0 +1,156 @@
+<html>
+  
+ <input type="text" id="username" name="username"/>
+ <input type="password" id="password" name="password"/>
+ 
+ <button type="button" onclick="return submitData()">checkData</button> 
+ <br><br>
+  <button type="button" onclick="return addData()">addData</button> 
+  <button type="button" onclick="return deleteData()">deleteData</button> 
+  <button type="button" onclick="return showData()">showData</button> 
+  <br><br>
+ <button type="button" onclick="return createIndex()">createIndex</button> 
+ <button type="button" onclick="return deleteIndex()">deleteIndex</button> 
+ <button type="button" onclick="return showIndex()">showIndex</button> 
+  
+ </html> 
+ <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+ <script>
+ var url = "http://localhost:9200/";
+ 
+ function submitData()
+{
+	//document.forms["filterdata"].submit(); 
+	var username = 	$("#username").val();
+	var password = $('#password').val(); 
+	 
+	var settings = {
+	  "url": url+"_sql?format=json",
+	  "type": "POST",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  "data": JSON.stringify({"query":"SELECT status FROM testerwin WHERE username='"+username+"' AND password='"+password+"' ","fetch_size":10}),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response); 
+	  if( typeof (response.rows[0]) == 'undefined' ){
+	  alert("Login Failed");
+	  }else{
+	  alert("Login "+response.rows[0]); 
+	  }
+	  
+	})  
+}
+
+ function addData()
+{
+	//document.forms["filterdata"].submit(); 
+	var username = 	$("#username").val();
+	var password = $('#password').val();  
+
+	var settings = {
+	  "url": url+"testerwin/user",
+	  "type": "POST",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  "data": JSON.stringify({"username" : username ,"password" : password,"status" : "berhasil"}),
+	}; 
+
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+	
+ function deleteData()
+{  
+	var username = 	$("#username").val();
+	var password = $('#password').val(); 
+	
+	var settings = {
+	  "url": url+"testerwin/_delete_by_query",
+	  "type": "POST",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	   "data": JSON.stringify(
+		   {
+			  "query": {
+				"match": {
+				  "username": username
+				}
+			  }
+			}
+		),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+	
+function showData()
+{   
+	var settings = {
+	  "url": url+"testerwin/_search?pretty",
+	  "type": "GET",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response.hits.hits);
+	}) 
+} 
+
+ function createIndex()
+{   
+	var settings = {
+	  "url": url+"testerwin",
+	  "type": "PUT",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  "data": JSON.stringify({ }),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+} 
+
+ function showIndex()
+{   
+	var settings = {
+	  "url": url+"_cat/indices",
+	  "type": "GET",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+
+ function deleteIndex()
+{   
+	var settings = {
+	  "url": url+"testerwin",
+	  "type": "DELETE",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+
+ </script>
