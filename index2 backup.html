@@ -2375,42 +2375,49 @@ async function start() {
   imageUpload.addEventListener('change', async () => {
 	const labeledFaceDescriptors = await loadLabeledImages()
 	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
-	if (image) image.remove()
-	if (canvas) canvas.remove()
-	image = await faceapi.bufferToImage(imageUpload.files[0]) 
-	container.append(image) 
-	canvas = faceapi.createCanvasFromMedia(image) 
-	container.append(canvas)
-	const displaySize = { width: image.width, height: image.height }
-	faceapi.matchDimensions(canvas, displaySize)
-	const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
-	const resizedDetections = faceapi.resizeResults(detections, displaySize)
-	const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-	results.forEach((result, i) => {
-		const box = resizedDetections[i].detection.box
-		const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-		drawBox.draw(canvas)
+    if (image) image.remove()
+    if (canvas) canvas.remove()
+    image = await faceapi.bufferToImage(imageUpload.files[0])
+	//image.style.position = "absolute"
+    container.append(image) 
+    canvas = faceapi.createCanvasFromMedia(image)
+	//canvas.style.left = "0px"
+	//canvas.style.top = "0px"
+    container.append(canvas)
+    const displaySize = { width: image.width, height: image.height }
+    faceapi.matchDimensions(canvas, displaySize)
+    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
+    const resizedDetections = faceapi.resizeResults(detections, displaySize)
+    const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
+    results.forEach((result, i) => {
+      const box = resizedDetections[i].detection.box
+      const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
+      drawBox.draw(canvas)
     })
   })
 }
 
 
-function loadLabeledImages() {  
-  const response = loadAjax(); 
-  return Promise.all( 
-    response.rows.map(async label => { 
-		 const descriptions = []  
-		 
-			const img = new Image(); img.src = label[1];
+function loadLabeledImages() {
+  //const labels = ['Black Widow', 'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor', 'Tony Stark','Muhamad Anugrah']
+  const labels = ['1', '2', '3', '4', '5']
+  return Promise.all(
+    labels.map(async label => {
+      const descriptions = []  
+		
+			const response = loadAjax(label) ;
+			//response.rows[0][0] ;
+			const img = new Image(); img.src = response.rows[0][1];
 			const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
 			descriptions.push(detections.descriptor) 
-		 
-      return new faceapi.LabeledFaceDescriptors( label[2] , descriptions)
-    }) 
+		
+		//document.body.append(img);
+      return new faceapi.LabeledFaceDescriptors( response.rows[0][0] , descriptions)
+    })
   )
 }
 
-function loadAjax( ) {
+function loadAjax( label ) {
 const url = "http://localhost:9201/";
 	var settings = {
 		  "url": url+"_sql?format=json",
@@ -2420,15 +2427,15 @@ const url = "http://localhost:9201/";
 			"Content-Type": "application/json"
 		  },
 		  "async": false,
-		  //""data": JSON.stringify({"query":"SELECT two, three FROM testerwin WHERE one='"+label+"' ","fetch_size":10}),
-		  "data": JSON.stringify({"query":"SELECT * FROM testerwin  ","fetch_size":10}),
+		  //"data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' AND two='"+two+"' ","fetch_size":10}),
+		  "data": JSON.stringify({"query":"SELECT two, three FROM testerwin WHERE one='"+label+"' ","fetch_size":10}),
 		};
 
-	let result = "";
+	let result = "asd";
 	$.ajax(settings).done(function (response) { 
 			 result = response;
 	}); 
-	//console.log( result );
+	console.log( result );
 	return result;
 }
 

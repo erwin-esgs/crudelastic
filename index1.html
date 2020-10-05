@@ -75,8 +75,7 @@ function loadLabeledImages() {
 		const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
 		console.log(detections);
         descriptions.push(detections.descriptor)
-      }
-
+      } 
       return new faceapi.LabeledFaceDescriptors(label, descriptions)
     })
   )
