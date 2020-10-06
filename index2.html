@@ -1951,9 +1951,52 @@
                                  
                             </div>
                         </div>
-                        <div id="imgcontainer" >
+                        
+						
+							<div class="row">
+                            <div class="col-sm-12 col-lg-6">
+                                <div class="card">
+                                    <div class="card-header-tab card-header">
+                                        <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
+											<i class="header-icon lnr-cloud-download icon-gradient bg-happy-itmeo"> </i>
+												Subject picture
+											</div> 
+                                    </div>
+                                    <div class="p-0 card-body">
+                                        <div class="p-1 slick-slider-sm mx-auto">
+                                            <div class="slick-slider">
+													<div id="imgcontainer" >
+														
+													</div> 
+                                            </div>
+                                        </div>
+                                          
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-lg-6">
+                                <div class=" card">
+                                    <div class="card-header-tab card-header">
+                                        <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
+                                            <i class="header-icon lnr-cloud-download icon-gradient bg-happy-itmeo"> </i>
+                                            Match faces
+                                        </div> 
+                                    </div>
+                                    <div class="p-0 card-body">
+                                        <div class="p-1 slick-slider-sm mx-auto">
+                                            <div class="slick-slider">
+                                                 <div id="imgcontainer" >
+														
+												  </div>  
+                                            </div>
+                                        </div>
+                                          
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 							
-						</div> 
+						
                     </div>
                      
             </div>
@@ -2351,11 +2394,14 @@
 const imageUpload = document.getElementById('imageUpload')
 const imgcontainer = document.getElementById('imgcontainer')
 
+const modelLocation = 'models';
 
 Promise.all([
-	faceapi.nets.faceRecognitionNet.loadFromUri('models'),
-	faceapi.nets.faceLandmark68Net.loadFromUri('models'),
-	faceapi.nets.ssdMobilenetv1.loadFromUri('models')
+	faceapi.nets.faceRecognitionNet.loadFromUri(modelLocation),
+	faceapi.nets.faceLandmark68Net.loadFromUri(modelLocation),
+	faceapi.nets.ssdMobilenetv1.loadFromUri(modelLocation),
+	faceapi.nets.ageGenderNet.loadFromUri(modelLocation)
+	
 ]).then(start)
 
 async function start() {
@@ -2372,40 +2418,56 @@ async function start() {
   let image
   let canvas
   
-  imageUpload.addEventListener('change', async () => {
+  imageUpload.addEventListener( 'change' , async () => { 
 	const labeledFaceDescriptors = await loadLabeledImages()
-	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
+	//console.log(labeledFaceDescriptors)
+	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6) 
+	//console.log(faceMatcher)
 	if (image) image.remove()
 	if (canvas) canvas.remove()
 	image = await faceapi.bufferToImage(imageUpload.files[0]) 
 	container.append(image) 
 	canvas = faceapi.createCanvasFromMedia(image) 
 	container.append(canvas)
+	
 	const displaySize = { width: image.width, height: image.height }
 	faceapi.matchDimensions(canvas, displaySize)
-	const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
+	const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors().withAgeAndGender()
 	const resizedDetections = faceapi.resizeResults(detections, displaySize)
-	const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-	results.forEach((result, i) => {
-		const box = resizedDetections[i].detection.box
-		const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-		drawBox.draw(canvas)
-    })
+	
+	const results = resizedDetections.map( (d) => {
+		const fm = faceMatcher.findBestMatch(d.descriptor);
+		const box = d.detection.box 
+		const drawBox = new faceapi.draw.DrawBox(box, { label:  fm.label.toString()  })
+		
+		//console.log(box)
+		
+		const anchor = { x: box.x, y: box.y }
+		const drawOptions = {
+		  anchorPosition: 'TOP_LEFT',
+		  backgroundColor: 'rgba(0, 0, 0, 0.5)'
+		}
+		const drawText = new faceapi.draw.DrawTextField( [ [" " + d.gender] , [" Age: " + Math.floor(d.age).toString()] ] , anchor , drawOptions)
+		drawBox.draw(canvas) 
+		drawText.draw(canvas) 
+	})
+	 
   })
 }
 
-
 function loadLabeledImages() {  
   const response = loadAjax(); 
+  
   return Promise.all( 
     response.rows.map(async label => { 
 		 const descriptions = []  
-		 
+		 //console.log(label);
 			const img = new Image(); img.src = label[1];
 			const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-			descriptions.push(detections.descriptor) 
+			//console.log(detections.descriptor)
+			descriptions.push(detections.descriptor)
 		 
-      return new faceapi.LabeledFaceDescriptors( label[2] , descriptions)
+      return new faceapi.LabeledFaceDescriptors( label[0] , descriptions) 
     }) 
   )
 }
@@ -2421,7 +2483,7 @@ const url = "http://localhost:9201/";
 		  },
 		  "async": false,
 		  //""data": JSON.stringify({"query":"SELECT two, three FROM testerwin WHERE one='"+label+"' ","fetch_size":10}),
-		  "data": JSON.stringify({"query":"SELECT * FROM testerwin  ","fetch_size":10}),
+		  "data": JSON.stringify({"query":"SELECT two, three FROM testerwin  ","fetch_size":10}),
 		};
 
 	let result = "";
