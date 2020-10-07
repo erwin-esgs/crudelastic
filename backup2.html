@@ -1954,7 +1954,7 @@
                         
 						
 							<div class="row">
-                            <div class="col-sm-12 col-lg-6">
+                            <div class="col-sm-12 col-lg-6" >
                                 <div class="card">
                                     <div class="card-header-tab card-header">
                                         <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
@@ -1985,7 +1985,7 @@
                                     <div class="p-0 card-body">
                                         <div class="p-1 slick-slider-sm mx-auto">
                                             <div class="slick-slider">
-                                                 <div id="imgcontainer" >
+                                                 <div id="imgcontainerright" >
 														
 												  </div>  
                                             </div>
@@ -2392,8 +2392,7 @@
 <script src="face-api.min.js"></script>
 <script type="text/javascript">
 const imageUpload = document.getElementById('imageUpload')
-const imgcontainer = document.getElementById('imgcontainer')
-
+const imgcontainer = document.getElementById('imgcontainer') 
 const modelLocation = 'models';
 
 Promise.all([
@@ -2416,16 +2415,22 @@ async function start() {
   imgcontainer.append(container);
   
   let image
-  let canvas
+  let canvas 
   
   imageUpload.addEventListener( 'change' , async () => { 
 	const labeledFaceDescriptors = await loadLabeledImages()
+	
 	//console.log(labeledFaceDescriptors)
-	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6) 
+	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.55) 
 	//console.log(faceMatcher)
 	if (image) image.remove()
 	if (canvas) canvas.remove()
-	image = await faceapi.bufferToImage(imageUpload.files[0]) 
+	image = await faceapi.bufferToImage(imageUpload.files[0])  
+	if( image.width > container.offsetWidth ){ 
+		image.height =  container.offsetWidth / image.width * image.height; 
+		image.width =  container.offsetWidth;
+	} 
+	
 	container.append(image) 
 	canvas = faceapi.createCanvasFromMedia(image) 
 	container.append(canvas)
@@ -2467,7 +2472,7 @@ function loadLabeledImages() {
 			//console.log(detections.descriptor)
 			descriptions.push(detections.descriptor)
 		 
-      return new faceapi.LabeledFaceDescriptors( label[0] , descriptions) 
+      return new faceapi.LabeledFaceDescriptors( label[0] , descriptions, img) 
     }) 
   )
 }
