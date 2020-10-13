@@ -17,7 +17,6 @@
 <link href="./main.87c0748b313a1dda75f5.css" rel="stylesheet">
 </head>
 <style>
-  
 	canvas {
 		position:absolute;
 	}
@@ -1970,7 +1969,7 @@
                             
                         </div>
                         
-						<div id="picture" >
+						<div id="picture" style="display:none;" >
 						
 							<div class="row"> 
 								<div class="col-sm-12 col-md-6 col-xl-6 col-lg-6">
@@ -2049,15 +2048,10 @@
 													Subject Cam
 												</div> 
 										</div>
-										<div class="p-0 card-body">
-											<div class="p-1 slick-slider-sm mx-auto">
-												<div class="slick-slider">
-														<div id="" >
-															
-														</div> 
-												</div>
-											</div>
-											  
+										<div class="p-1 card-body"> 
+											<div id="videocontainer" >
+												<video id="video" muted autoplay="true" ></video>
+											</div>   
 										</div>
 									</div>
 								</div>
@@ -2068,14 +2062,9 @@
 												Match faces
 											</div> 
 										</div>
-										<div class="p-0 card-body">
-											<div class="p-1 slick-slider-sm mx-auto">
-												<div class="slick-slider">
-													 <div id="" >
-															
-													  </div>  
-												</div>
-											</div>
+										<div class="p-0 card-body"> 
+											 <div id="videocontainerright"> 
+										  </div>   
 											  
 										</div>
 									</div>
@@ -2477,158 +2466,4 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 <script src="face-api.min.js"></script>
-<script type="text/javascript">
-const pictureTab = document.getElementById('picture')
-const webcamTab = document.getElementById('webcam')
-function popup(flag){
-	if(flag == 0){
-		pictureTab.style.display = "block";
-		webcamTab.style.display = "none";
-	}else{
-		pictureTab.style.display = "none";
-		webcamTab.style.display = "block";
-	}
-}
-
-const imageUpload = document.getElementById('imageUpload')
-const imgcontainer = document.getElementById('imgcontainer') 
-const imgcontainerright = document.getElementById('imgcontainerright') 
-const modelLocation = 'models';
-
-Promise.all([
-	faceapi.nets.faceRecognitionNet.loadFromUri(modelLocation),
-	faceapi.nets.faceLandmark68Net.loadFromUri(modelLocation),
-	faceapi.nets.ssdMobilenetv1.loadFromUri(modelLocation),
-	faceapi.nets.ageGenderNet.loadFromUri(modelLocation)
-	
-]).then(start)
-
-async function start() {
-  document.getElementById('wait').innerHTML = "Select File"
-  imageUpload.style.display = "block"
-  
-  const container = document.createElement("div")
-  container.style.position = "relative";
-  container.style.justifyContent = "center";
-  container.style.flexDirection = "column";
-  container.style.display = "flex";
-  imgcontainer.append(container);
-  
-  let containerright  
-  let image 
-  let canvas 
-  
-  imageUpload.addEventListener( 'change' , async () => { 
-	if (containerright) containerright.remove()
-	containerright = document.createElement("div")
-	containerright.style.position = "relative";
-	containerright.style.justifyContent = "center";
-	containerright.style.flexDirection = "column";
-	//containerright.style.display = "flex";
-	imgcontainerright.append(containerright);
-	
-	const response = loadAjax(); 
-  
-	const labeledFaceDescriptors = await loadLabeledImages(response)
-	
-	//console.log(labeledFaceDescriptors)
-	const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.55) 
-	
-	if (image) image.remove()
-	
-	if (canvas) canvas.remove()
-	image = await faceapi.bufferToImage(imageUpload.files[0])  
-	if( image.width > container.offsetWidth ){ 
-		image.height =  container.offsetWidth / image.width * image.height; 
-		image.width =  container.offsetWidth;
-	} 
-	
-	container.append(image) 
-	canvas = faceapi.createCanvasFromMedia(image) 
-	container.append(canvas)
-	
-	const displaySize = { width: image.width, height: image.height }
-	faceapi.matchDimensions(canvas, displaySize)
-	const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors().withAgeAndGender()
-	const resizedDetections = faceapi.resizeResults(detections, displaySize)
-	
-	//console.log( response.rows ) 
-	
-	let i=0;
-	const results = resizedDetections.map( (d) => {
-		const fm = faceMatcher.findBestMatch(d.descriptor);
-		const box = d.detection.box 
-		
-		
-		let labelDetection = ""
-		for( let j=0; j< response.rows.length; j++){
-			if( fm.label.toString() == response.rows[j][0] ){
-				labelDetection = response.rows[j][1]
-				let image2 = new Image(); image2.src  = response.rows[j][2]
-				
-				image2.onload = function() {  
-					if( image2.width > containerright.offsetWidth ){ 
-						image2.height =  containerright.offsetWidth / image2.width * image2.height; 
-						image2.width =  containerright.offsetWidth; 
-					}  
-				 containerright.append(image2)
-				} 
-			}
-		} 
-		
-		const drawBox = new faceapi.draw.DrawBox(box, { label:  labelDetection  }) 
-		
-		const anchor = { x: box.x, y: box.y }
-		const drawOptions = {
-		  anchorPosition: 'TOP_LEFT',
-		  backgroundColor: 'rgba(0, 0, 0, 0.5)'
-		}
-		const drawText = new faceapi.draw.DrawTextField( [ [" " + d.gender] , [" Age: " + Math.floor(d.age).toString()] ] , anchor , drawOptions)
-		drawBox.draw(canvas) 
-		drawText.draw(canvas) 
-		
-		i++
-	})
-	 
-  })
-}
-
-function loadLabeledImages(response) {   
-  
-  return Promise.all( 
-    response.rows.map(async label => { 
-		 const descriptions = []  
-		 //console.log(label);
-			const img = new Image(); img.src = label[2];
-			const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-			//console.log(detections.descriptor)
-			descriptions.push(detections.descriptor)
-		 
-      return new faceapi.LabeledFaceDescriptors( label[0] , descriptions) 
-    }) 
-  )
-}
-
-function loadAjax( ) {
-const url = "http://localhost:9201/";
-	var settings = {
-		  "url": url+"_sql?format=json",
-		  "type": "POST",
-		  "timeout": 0,
-		  "headers": {
-			"Content-Type": "application/json"
-		  },
-		  "async": false,
-		  //""data": JSON.stringify({"query":"SELECT two, three FROM testerwin WHERE one='"+label+"' ","fetch_size":10}),
-		  "data": JSON.stringify({"query":"SELECT one, two, three FROM testerwin  ","fetch_size":100}),
-		};
-
-	let result = "";
-	$.ajax(settings).done(function (response) { 
-			 result = response;
-	}); 
-	//console.log( result );
-	return result;
-}
-
-</script>
+<script src="js.js"></script>
