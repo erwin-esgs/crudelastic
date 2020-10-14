@@ -22,7 +22,7 @@
  
  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
  <script>
- var url = "http://192.168.13.182:9201/";
+ var url = "https://192.168.13.182:9201/";
  
  let image;
  
@@ -52,7 +52,7 @@ document.getElementById("filedata").addEventListener("change", readFile);
 		"Content-Type": "application/json"
 	  },
 	  //"data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' AND two='"+two+"' ","fetch_size":10}),
-	  "data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' ","fetch_size":10}),
+	  "data": JSON.stringify({"query":"SELECT three FROM testerwin WHERE one='"+one+"' ","fetch_size":20}),
 	};  
 	$.ajax(settings).done(function (response) {
 	  console.log(response.rows[0]); 
