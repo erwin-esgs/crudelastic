@@ -1,0 +1,180 @@
+<html>
+<body>
+
+ <input type="text" id="one" name="one"/>
+ <input type="text" id="two" name="two"/> 
+ <input type="text" id="three" name="three"/> 
+ <!-- <textarea id="three" name="three" ></textarea> -->
+ 
+ <button type="button" onclick="return submitData()">checkData</button> 
+ <br><br>
+  <button type="button" onclick="return addData()">addData</button> 
+  <button type="button" onclick="return deleteData()">deleteData</button> 
+  <button type="button" onclick="return showData()">showData</button> 
+  <br><br>
+ <button type="button" onclick="return createIndex()">createIndex</button> 
+ <button type="button" onclick="return deleteIndex()">deleteIndex</button> 
+ <button type="button" onclick="return showIndex()">showIndex</button> 
+ <br><br>
+ <input type="file" id="filedata" name="filedata"/>
+ 
+ </body>
+ </html> 
+ 
+ <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+ <script>
+ //var url = "https://192.168.13.182:9201/";
+ var url = "http://localhost:9202/";
+ 
+ let image;
+ 
+ function readFile() { 
+  if (this.files && this.files[0]) { 
+	var FR= new FileReader(); 
+	FR.addEventListener("load", function(e) {
+	  //document.getElementById("img").src       = e.target.result;
+	  document.getElementById("three").innerHTML = e.target.result; 
+	});  
+	FR.readAsDataURL( this.files[0] );
+  }  
+}
+document.getElementById("filedata").addEventListener("change", readFile);
+ 
+ function submitData()
+{
+	var one = 	$("#one").val();
+	var two = $('#two').val(); 
+	var three = $('#three').val();  
+	
+	var settings = {
+	  "url": url+"_sql?format=json",
+	  "type": "POST",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  //"data": JSON.stringify({"query":"SELECT three FROM user WHERE one='"+one+"' AND two='"+two+"' ","fetch_size":10}),
+	  "data": JSON.stringify({"query":"SELECT three FROM user WHERE one='"+one+"' ","fetch_size":20}),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response.rows[0]); 
+	  // if( typeof (response.rows[0]) == 'undefined' ){ alert("Login Failed"); }else{ alert("Login "+response.rows[0]);  }
+	  if (image) image.remove();
+	  image = new Image();
+	  image.src = response.rows[0];
+	  document.body.append(image);
+	})  
+}
+ 
+ function addData()
+{ 
+	var one = 	$("#one").val();
+	var two = $('#two').val();  
+	var three = $('#three').val();   
+	
+	var settings = {
+	  "url": url+"user/table",
+	  "type": "POST",
+	  "id":"1",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  "data": JSON.stringify({"one" : one ,"two" : two,"three" : three}),
+	}; 
+	 
+
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+	
+ function deleteData()
+{  
+	var one = 	$("#one").val(); 
+	
+	var settings = {
+	  "url": url+"user/_delete_by_query",
+	  "type": "POST",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	   "data": JSON.stringify(
+		   {
+			  "query": {
+				"match": {
+				  "one": one
+				}
+			  }
+			}
+		),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+	
+function showData()
+{   
+	var settings = {
+	  "url": url+"user/_search?pretty",
+	  "type": "GET",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response.hits.hits);
+	}) 
+} 
+
+ function createIndex()
+{   
+	var settings = {
+	  "url": url+"user",
+	  "type": "PUT", 
+	  "dataType": "json",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  },
+	  "data": JSON.stringify({ }),
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+} 
+
+ function showIndex()
+{   
+	var settings = {
+	  "url": url+"_cat/indices",
+	  "type": "GET",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+
+ function deleteIndex()
+{   
+	var settings = {
+	  "url": url+"user",
+	  "type": "DELETE",
+	  "timeout": 0,
+	  "headers": {
+		"Content-Type": "application/json"
+	  }, 
+	};  
+	$.ajax(settings).done(function (response) {
+	  console.log(response);
+	}) 
+}
+
+ </script>

@@ -1,3 +1,4 @@
+//console.log(sessionStorage.getItem("lastname"))
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -88,9 +89,11 @@ async function start() {
 	
 	if (canvas) canvas.remove()
 
-		delay(3000)
+	
 
-	image = await faceapi.bufferToImage(imageUpload.files[0])  
+	//image = await faceapi.bufferToImage(imageUpload.files[0])  
+	image = new Image();  
+	image.onload = async function () {
 		if( image.width > container.offsetWidth ){ 
 			image.height =  container.offsetWidth / image.width * image.height; 
 			image.width =  container.offsetWidth;
@@ -140,6 +143,8 @@ async function start() {
 			
 			i++
 		}) 
+	}
+	image.src = URL.createObjectURL(imageUpload.files[0]); // set src to blob url
 	 
 	})
 }
@@ -232,13 +237,10 @@ async function init(){
 									}
 								} 
 								  
-							})
-							
-							flag=0;
-							
+							}) 
+							flag=0; 
 						}
-						
-						
+						 
 					}, 1500)
 			})
 			
@@ -266,6 +268,7 @@ function loadLabeledImages(response) {
 
 function loadAjax( ) { 
 const url = "https://192.168.13.182:9201/";
+//const url = "https://localhost:9201/";
 	var settings = {
 		  "url": url+"_sql?format=json",
 		  "type": "POST",
